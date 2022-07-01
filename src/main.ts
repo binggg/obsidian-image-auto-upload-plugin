@@ -13,6 +13,7 @@ import {
 
 import { resolve, extname, relative, join, parse, posix } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { tmpdir } from 'os'
 
 import {
   isAssetTypeAnImage,
@@ -267,7 +268,7 @@ export default class imageAutoUploadPlugin extends Plugin {
   }
 
   // uploda all file
-  uploadAllFile() {
+  async uploadAllFile() {
     let key = this.helper.getValue();
 
     const thisPath = this.app.vault.getAbstractFileByPath(
@@ -317,6 +318,19 @@ export default class imageAutoUploadPlugin extends Plugin {
             source: match.source,
           });
         }
+      } else if (!(encodedUri.startsWith('https://raw.githubusercontent.com/'))) {
+        const imagePath = join(tmpdir(), imageName);
+        const response = await this.download(
+          encodedUri,
+          imagePath
+         );
+         if (response.ok) {
+           imageList.push({
+             path: imagePath,
+             name: imageName,
+             source: match.source,
+           });
+         }
       }
     }
     if (imageList.length === 0) {
